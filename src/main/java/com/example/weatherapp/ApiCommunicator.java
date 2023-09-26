@@ -7,7 +7,7 @@ public class ApiCommunicator
 {
     public String getWeatherData(String latitude, String longitude, String key, String unit)
     {
-        String url = "https://api.openweathermap.org/data/3.0/onecall?lat=" + latitude + "&lon=" + longitude + "&exclude=minutely&unit=" + unit + "&appid=" + key;
+        String url = "https://api.openweathermap.org/data/3.0/onecall?lat=" + latitude + "&lon=" + longitude + "&exclude=minutely&units=" + unit + "&appid=" + key;
         return getData(url, key);
     }
 
