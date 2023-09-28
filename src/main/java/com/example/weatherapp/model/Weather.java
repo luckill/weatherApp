@@ -2,48 +2,43 @@ package com.example.weatherapp.model;
 
 
 import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.core.type.*;
+import com.fasterxml.jackson.databind.*;
 
-import java.sql.*;
+import java.time.*;
 import java.util.*;
 
 public class Weather
 {
-    @JsonProperty("temp")
-    private int temperature;
-    @JsonProperty("feels_like")
-    private int feelLike;
     @JsonProperty("uvi")
     private double uv;
+    @JsonProperty("humidity")
+    private int humidity;
     @JsonProperty("clouds")
-    private double cloud;
+    private int cloud;
     @JsonProperty("wind_speed")
     private double windSpeed;
-    private String sunRise;
-    private String Sunset;
-    private WeatherCondition condition;
+    @JsonProperty("weather")
+    private JsonNode weatherCondition;
+
+    private String weatherConditionId;
+    private String weatherConditionDescription;
+    private String weatherConditionIconURL;
+
 
     public Weather()
     {
 
     }
 
-    public Weather(int temperature, int feelLike, double uv, double cloud, double windSpeed, Time sunRise, Time sunset)
+    public Weather(double uv, int humidity, int cloud, double windSpeed)
     {
-        this.temperature = temperature;
-        this.feelLike = feelLike;
         this.uv = uv;
+        this.humidity = humidity;
         this.cloud = cloud;
         this.windSpeed = windSpeed;
-    }
-
-    public int getTemperature()
-    {
-        return temperature;
-    }
-
-    public int getFeelLike()
-    {
-        return feelLike;
+        this.weatherCondition = weatherCondition;
     }
 
     public double getUv()
@@ -51,7 +46,7 @@ public class Weather
         return uv;
     }
 
-    public double getCloud()
+    public int getCloud()
     {
         return cloud;
     }
@@ -61,28 +56,39 @@ public class Weather
         return windSpeed;
     }
 
-    public String getSunRise()
+    public int getHumidity()
     {
-        return sunRise;
+        return humidity;
     }
 
-    public String getSunset()
+    public String getWeatherConditionId()
     {
-        return Sunset;
+        return weatherConditionId;
     }
 
-    public void setSunRise(String sunRise)
+    public String getWeatherConditionDescription()
     {
-        this.sunRise = sunRise;
+        return weatherConditionDescription;
     }
 
-    public void setSunset(String sunset)
+    public String getWeatherConditionIconURL()
     {
-        Sunset = sunset;
+        return weatherConditionIconURL;
     }
 
-    public void setCondition(WeatherCondition condition)
+
+    protected void initialize()
     {
-        this.condition = condition;
+        this.weatherConditionDescription = weatherCondition.get(0).get("description").asText();
+        this.weatherConditionId = weatherCondition.get(0).get("id").asText();
+        this.weatherConditionIconURL = "http://openweathermap.org/img/w/" + weatherCondition.get(0).get("icon").asText() + ".png";
+    }
+
+    public String convertTimeStamp(long timeStamp, String timeZone)
+    {
+        ZoneId istZone = ZoneId.of(timeZone);
+        ZonedDateTime time = ZonedDateTime.ofInstant(Instant.ofEpochSecond(timeStamp), istZone);
+
+        return time.toLocalTime().toString();
     }
 }
