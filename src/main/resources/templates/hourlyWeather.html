@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="ISO-8859-1">
+    <title>Weather App</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link rel="stylesheet" href="/hourlyWeather.css">
+</head>
+<body>
+    <div class="container">
+        <h4 th:text="${location.city} + ', ' + ${location.state} + ' ' + ${location.country}"></h4>
+        <div th:each=" weather: ${hourlyWeather}">
+            <div class="card">
+                <div class="card-header" th:text="${weather.time}"></div>
+                <div class="card-body">
+                    <div style="display:inline-block;">
+                        <div>
+                            <p th:text="${weather.temperature} + '&#8451;, ' + ${weather.weatherConditionDescription} + ', feel like ' + ${weather.feelLike} +'&#8451;'"></p>
+                            <p th:text="'humidity: ' + ${weather.humidity} +'%&emsp;cloudness: ' + ${weather.cloud} + '%&emsp;uv index: ' + ${weather.uv}"></p>
+                            <p th:text="'probability of precipitation: ' + ${weather.precipitationProbability * 100} +'%,&emsp;wind speed: ' + ${weather.windSpeed} +'km/h'"></p>
+                        </div>
+                        <img th:src="${weather.weatherConditionIconURL}" alt="weather icon">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
