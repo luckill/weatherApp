@@ -5,6 +5,7 @@
     <title>Weather App</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <link rel="stylesheet" href="/hourlyWeather.css">
+    <nav th:replace = "NavBar :: DarkNavBar"></nav>
 </head>
 <body>
     <div class="container">
@@ -17,7 +18,7 @@
                         <div>
                             <p th:text="${weather.temperature} + '&#8451;, ' + ${weather.weatherConditionDescription} + ', feel like ' + ${weather.feelLike} +'&#8451;'"></p>
                             <p th:text="'humidity: ' + ${weather.humidity} +'%&emsp;cloudness: ' + ${weather.cloud} + '%&emsp;uv index: ' + ${weather.uv}"></p>
-                            <p th:text="'probability of precipitation: ' + ${weather.precipitationProbability * 100} +'%,&emsp;wind speed: ' + ${weather.windSpeed} +'km/h'"></p>
+                            <p th:text="'probability of precipitation: ' + ${#numbers.formatDecimal(weather.precipitationProbability * 100, 1, 2)} +'%,&emsp;wind speed: ' + ${weather.windSpeed} +'km/h'"></p>
                         </div>
                         <img th:src="${weather.weatherConditionIconURL}" alt="weather icon">
                     </div>
