@@ -88,7 +88,6 @@ public class Weather
     {
         ZoneId istZone = ZoneId.of(timeZone);
         ZonedDateTime time = ZonedDateTime.ofInstant(Instant.ofEpochSecond(timeStamp), istZone);
-
         return time.toLocalTime().toString();
     }
 }

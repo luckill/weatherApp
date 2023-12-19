@@ -4,6 +4,10 @@ import com.example.weatherapp.Controller.*;
 import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.*;
 
+import java.time.*;
+import java.time.format.*;
+import java.util.*;
+
 public class DailyWeather extends Weather
 {
     @JsonProperty("summary")
@@ -18,13 +22,16 @@ public class DailyWeather extends Weather
     private long sunRiseTimeStamp;
     @JsonProperty("sunset")
     private long sunSetTimeStamp;
+    @JsonProperty("dt")
+    private long reportTimeStamp;
+    private String date;
+    private String dayOfTheWeek;
 
     private String sunRise;
     private String sunSet;
 
     private int morningTemperature;
     private int dayTemperature;
-    private int afternoonTemperature;
     private int eveningTemperature;
     private int nightTemperature;
     private int dailyMax;
@@ -32,7 +39,6 @@ public class DailyWeather extends Weather
 
     private int morningFeelLikeTemperature;
     private int dayFeelLikeTemperature;
-    private int afternoonFeelLikeTemperature;
     private int eveningFeelLikeTemperature;
     private int nightFeelLikeTemperature;
 
@@ -76,16 +82,9 @@ public class DailyWeather extends Weather
         return morningTemperature;
     }
 
-
-
     public int getDayTemperature()
     {
         return dayTemperature;
-    }
-
-    public int getAfternoonTemperature()
-    {
-        return afternoonTemperature;
     }
 
     public int getEveningTemperature()
@@ -106,11 +105,6 @@ public class DailyWeather extends Weather
     public int getDayFeelLikeTemperature()
     {
         return dayFeelLikeTemperature;
-    }
-
-    public int getAfternoonFeelLikeTemperature()
-    {
-        return afternoonFeelLikeTemperature;
     }
 
     public int getEveningFeelLikeTemperature()
@@ -143,6 +137,16 @@ public class DailyWeather extends Weather
         return feelLike;
     }
 
+    public String getDate()
+    {
+        return date;
+    }
+
+    public String getDayOfTheWeek()
+    {
+        return dayOfTheWeek;
+    }
+
     public void initialize(JsonNode temp, JsonNode feelLike)
     {
         super.initialize();
@@ -160,5 +164,15 @@ public class DailyWeather extends Weather
         this.dayFeelLikeTemperature = feelLike.get("day").asInt();
         this.eveningFeelLikeTemperature = feelLike.get("eve").asInt();
         this.nightFeelLikeTemperature = feelLike.get("night").asInt();
+        convertTime(reportTimeStamp, WeatherController.timeZone);
+    }
+
+    public void convertTime(long timeStamp, String timeZone)
+    {
+        ZoneId istZone = ZoneId.of(timeZone);
+        ZonedDateTime time = ZonedDateTime.ofInstant(Instant.ofEpochSecond(timeStamp), istZone);
+        LocalDate date = time.toLocalDate();
+        this.dayOfTheWeek = date.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.US);
+        this.date = date.toString().replace("T", " ");
     }
 }

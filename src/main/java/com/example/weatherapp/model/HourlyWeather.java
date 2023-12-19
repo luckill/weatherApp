@@ -1,5 +1,6 @@
 package com.example.weatherapp.model;
 
+import com.example.weatherapp.Controller.*;
 import com.fasterxml.jackson.annotation.*;
 
 import java.time.*;
@@ -56,12 +57,13 @@ public class HourlyWeather extends Weather
     public void initialize()
     {
         super.initialize();
-        this.time = convertTime();
+        this.time = convertTime(reportTimeStamp, WeatherController.timeZone);
     }
 
-    private String convertTime()
+    public String convertTime(long timeStamp, String timeZone)
     {
-        long unixTime = this.reportTimeStamp;
-        return LocalDateTime.ofEpochSecond(unixTime, 0, ZoneOffset.UTC).toString().replace("T", " ");
+        ZoneId istZone = ZoneId.of(timeZone);
+        ZonedDateTime time = ZonedDateTime.ofInstant(Instant.ofEpochSecond(timeStamp), istZone);
+        return time.toLocalDateTime().toString().replace("T", " ");
     }
 }
