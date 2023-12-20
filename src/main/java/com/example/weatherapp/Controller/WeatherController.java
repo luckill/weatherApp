@@ -6,9 +6,11 @@ import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.type.*;
 import com.fasterxml.jackson.databind.*;
 import org.springframework.beans.factory.annotation.*;
+import org.springframework.context.annotation.*;
 import org.springframework.stereotype.*;
 import org.springframework.ui.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.annotation.*;
 
 import java.util.*;
 
@@ -19,7 +21,7 @@ public class WeatherController
     private ApiCommunicator api = new ApiCommunicator();
     private ObjectMapper mapper = new ObjectMapper();
     private Map<String, String> airPollutionMap;
-    private List<HourlyWeather> hourlyWeathers;
+    public static List<HourlyWeather> hourlyWeathers = new ArrayList<>();
     private Location location;
 
     private final ApiConfiguration apiConfiguration;
@@ -30,52 +32,64 @@ public class WeatherController
         this.apiConfiguration = apiConfiguration;
     }
 
-    @GetMapping("/")
-    public String getWeatherData(Model model)
+    @RequestMapping(value = "/", method = {RequestMethod.GET, RequestMethod.POST})
+    public String getWeatherData(Model model, @RequestParam(value = "city", defaultValue = "San Francisco") String city, @RequestParam(value = "input", defaultValue = "0") int forecastOption) throws JsonProcessingException
     {
-        String city = "San Francisco";
+        System.out.println(city);
         String json = api.getData(city, apiConfiguration.AuthorizeToke());
-        try
+
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        List<Location> locations = mapper.readValue(json, new TypeReference<List<Location>>()
         {
-            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-            List<Location> locations = mapper.readValue(json, new TypeReference<List<Location>>()
-            {
-            });
-            if (locations.isEmpty())
-            {
-                model.addAttribute("errorMessage", "Invalid city!!! - no weather data available for the city entered");
-                return "index";
-            }
+        });
+        if (locations.isEmpty())
+        {
+            model.addAttribute("errorMessage", "Invalid city!!! - no weather data available for the city entered");
+            return "index";
+        }
 
-            location = locations.get(0);
-            airPollutionMap = api.getData(location.getLatitude(), location.getLongitude(), apiConfiguration.AuthorizeToke());
-            AirQuality airQuality = mapper.treeToValue(mapper.readTree(airPollutionMap.get("current")).get("list").get(0).get("components"), AirQuality.class);
+        location = locations.get(0);
+        airPollutionMap = api.getData(location.getLatitude(), location.getLongitude(), apiConfiguration.AuthorizeToke());
+        AirQuality airQuality = mapper.treeToValue(mapper.readTree(airPollutionMap.get("current")).get("list").get(0).get("components"), AirQuality.class);
 
-            json = api.getData(location.getLatitude(), location.getLongitude(), apiConfiguration.AuthorizeToke(), "metric", WeatherOption.CURRENT);
-            JsonNode tree = mapper.readTree(json);
-            timeZone = tree.path("timezone").asText();
+        json = api.getData(location.getLatitude(), location.getLongitude(), apiConfiguration.AuthorizeToke(), "metric", WeatherOption.CURRENT);
+        JsonNode tree = mapper.readTree(json);
+        timeZone = tree.path("timezone").asText();
 
-            CurrentWeather currentWeather = mapper.treeToValue(tree.path("current"), CurrentWeather.class);
-            currentWeather.initialize();
+        CurrentWeather currentWeather = mapper.treeToValue(tree.path("current"), CurrentWeather.class);
+        currentWeather.initialize();
 
-            List<DailyWeather> dailyWeathers = mapper.readValue(tree.path("daily").toString(), new TypeReference<List<DailyWeather>>() {});
-            for (DailyWeather weather : dailyWeathers)
-            {
-                weather.initialize(weather.getTemp(), weather.getFeelLike());
-            }
+        List<DailyWeather> dailyWeathers = mapper.readValue(tree.path("daily").toString(), new TypeReference<List<DailyWeather>>()
+        {
+        });
+        for (DailyWeather weather : dailyWeathers)
+        {
+            weather.initialize(weather.getTemp(), weather.getFeelLike());
+        }
 
-            String hourly = tree.path("hourly").toString();
+        List<HourlyWeather> hourlyWeathers = mapper.readValue(tree.path("hourly").toString(), new TypeReference<List<HourlyWeather>>()
+        {
+        });
+        for (HourlyWeather weather : hourlyWeathers)
+        {
+            weather.initialize();
+        }
 
+        if(forecastOption == 0)
+        {
+            System.out.println(hourlyWeathers.size());
             model.addAttribute("airQuality", airQuality);
             model.addAttribute("location", location);
             model.addAttribute("currentWeather", currentWeather);
             model.addAttribute("dailyWeathers", dailyWeathers);
+            return "index";
         }
-        catch (JsonProcessingException e)
+        else
         {
-            e.printStackTrace();
+            model.addAttribute("location", location);
+            model.addAttribute("hourlyWeather", hourlyWeathers);
+            return "hourlyWeather";
         }
-        return "index";
     }
 
     @GetMapping("/hour")
@@ -83,16 +97,16 @@ public class WeatherController
     {
         try
         {
+            System.out.println(timeZone);
+            System.out.println(hourlyWeathers.size());
             String json = api.getData("Sacramento", apiConfiguration.AuthorizeToke());
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-            List<Location> locations = mapper.readValue(json, new TypeReference<List<Location>>(){});
+            List<Location> locations = mapper.readValue(json, new TypeReference<List<Location>>()
+            {
+            });
             location = locations.get(0);
             JsonNode tree = mapper.readTree(api.getData(location.getLatitude(), location.getLongitude(), apiConfiguration.AuthorizeToke(), "metric", WeatherOption.HOURLY)).path("hourly");
-            List<HourlyWeather> hourlyWeathers = mapper.readValue(tree.toString(), new TypeReference<List<HourlyWeather>>(){});
-            for (HourlyWeather weather : hourlyWeathers)
-            {
-                weather.initialize();
-            }
+
             model.addAttribute("location", location);
             model.addAttribute("hourlyWeather", hourlyWeathers);
         }
@@ -101,6 +115,6 @@ public class WeatherController
             throw new RuntimeException(e);
         }
 
-        return "hourlyWeather";
+        return "temp";
     }
 }
